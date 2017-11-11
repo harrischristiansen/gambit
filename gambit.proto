@@ -1,0 +1,69 @@
+syntax = "proto3";
+package gambit;
+
+// ExecuteMatchRequest is a request from a game player to the game server.
+// The player opens the ExecuteMatch call. Initially, the player is entered into a queue.
+message ExecuteMatchRequest {
+  // Init contains the first message sent by the client, containing the desired match configuration.
+  // It is only sent once and never sent again.
+  ClientInit init = 1;
+  // MakeMove is a command to make a move.
+  MakeMove make_move = 2;
+
+  // ClientInit is the first message, containing the desired match configuration.
+  message ClientInit {
+    // Identity contains the player identity.
+    IdentityConfig identity = 1;
+    // GameConfig contains the game mode configuration.
+    GameConfig game_config = 2;
+  }
+
+  // MakeMove fulfills a move requested by the server.
+  message MakeMove {
+    // Move is the move to make.
+    Move move = 1;
+  }
+}
+
+// ExecuteMatchResponse is a response from the game server to the game player.
+message ExecuteMatchResponse {
+  // MatchState contains an update to the current game/queue state.
+  ExecuteMatchState match_state = 1;
+
+  // ExecuteMatchState contains an update to the current game/queue state.
+  message ExecuteMatchState {
+    // SecondsInQueue is the number of seconds the player has been in the queue, if queuing.
+    uint32 seconds_in_queue = 1;
+    // CurrentMove is the current move number. When this is incremented, the client should play the next move.
+    // Move counter starts at 1. If current_move > 0 then the match is in progress.
+    uint32 current_move = 2;
+    // GameState contains the game state.
+    GameState game_state = 3;
+  }
+}
+
+// IdentityConfig contains the client identity.
+message IdentityConfig {
+  // ClientToken is the unique token for the client.
+  string client_token = 1;
+}
+
+// GameConfig contains information about the selected game.
+message GameConfig {
+  // GameId is the ID of the game the player wants to play.
+  string game_id = 1;
+}
+
+// GameState contains the current game state.
+message GameState {
+}
+
+// Move contains a move to make.
+message Move {
+}
+
+// GameService is the game host server.
+service GameService {
+  // ExecuteMatch is a long-lived session for queuing and playing a match as a player.
+  rpc ExecuteMatch(stream ExecuteMatchRequest) returns (stream ExecuteMatchResponse) {}
+}
